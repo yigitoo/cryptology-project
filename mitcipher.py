@@ -26,7 +26,7 @@ class Encrypt:
 # Decyrpter
 class Decrypt:
     def __init__(self, destination = None, output = None) -> None:
-        if destination == None or destination == "":
+        if destination == None or destination == "" or type(destination) != int:
             while True:
                 self.destination = input("Give video destination for decyrpt to text: ") 
                 # check is it a path:
