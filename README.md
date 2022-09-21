@@ -3,8 +3,10 @@
 - To install dependicies:
 <br>
 <code>
-user@machine$ pip3 install -r requirements.txt<br>
-<br>user@machine$ sudo apt-get install libportaudio2<br>
+user@machine$ pip3 install -r requirements.txt
+<code>
+<code>
+user@machine$ sudo apt-get install libportaudio2
 </code>
 <br>Şifreleme algoritmaları:
 <br>Sezar Algoritması, 
