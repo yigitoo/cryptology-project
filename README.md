@@ -4,7 +4,7 @@
 <br>
 <code>
 user@machine$ pip3 install -r requirements.txt<br>
-user@machine$ sudo apt-get install libportaudio2<br>
+<br>user@machine$ sudo apt-get install libportaudio2<br>
 </code>
 <br>Şifreleme algoritmaları:
 <br>Sezar Algoritması, 
