@@ -4,7 +4,7 @@
 <br>
 <code>
 user@machine$ pip3 install -r requirements.txt
-</code>
+</code><br>
 <code>
 user@machine$ sudo apt-get install libportaudio2
 </code>
