@@ -1,4 +1,3 @@
-import sounddevice as sd
 import numpy as np
 
 char_to_dots = {
@@ -44,10 +43,26 @@ def code_to_sound(code):
 
 
     return wave_group
-my_message = "Merhaba Yigit"
-morse_text=text_to_morse(my_message)
-morse_sound=code_to_sound(morse_text)
-sd.play(morse_sound, S_rate)
-import time
-time.sleep(55)
-sd.stop()
+
+def input2morse(input:str = None, ignore = False):
+    if ignore:
+        exit
+    else:
+        morse_text=text_to_morse(input)
+        morse_sound=code_to_sound(morse_text)
+        return morse_sound
+
+
+if __name__ == "__main__":
+    morse_text=text_to_morse("a")
+    morse_sound=code_to_sound(morse_text)
+    np.savetxt('ms.csv',morse_sound)
+    np.savetxt('msf.csv',morse_sound,'%5.6f')
+    morse_sound=np.loadtxt('msf.csv')
+
+
+    import sounddevice as sd
+    sd.play(morse_sound, S_rate)
+    import time
+    time.sleep(2)
+    sd.stop()

@@ -9,16 +9,12 @@ import pymongo as mongo
 
 
 #variables and funcs
-def decipher(path = None):
-    Decrypt(path)
-def cipher(path = None):
-    Encrypt(path)
+
 
 #GUI
 root = tk.Tk()
 root.geometry("400x400")
 root.title("Kriptoloji Projesi")
-
 frame = tk.Frame(bg='#323340')
 
 cipher_label = tk.Label(
