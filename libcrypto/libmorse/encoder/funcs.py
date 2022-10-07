@@ -1,7 +1,31 @@
 import numpy as np
+from scipy.io.wavfile import write as write_wav
 from PIL import Image
 import cv2, os
 import ffmpeg
+try:
+    from libcrypto.libmorse.encoder.text2morse import input2morse
+    from libcrypto.libmorse.decoder.morse import MorseCode
+except:
+    from .text2morse import input2morse
+    from ..decoder.morse import MorseCode
+
+def text2video(text:str = None):
+    output = input2morse(text)
+    return output
+
+def morse2wav(arr):
+    scaled = np.int16(arr/np.max(np.abs(arr)) * 32767)
+    write_wav('outt.wav', 44100, scaled)
+
+
+def wav2text(file:str = None):
+    try:
+        decoded = MorseCode.from_wavfile(file).decode()
+        sys.stdout.write(decoded + "\n")
+    except UserWarning as err:
+        sys.stderr.write(f"{err}\n")
+        sys.exit(1)
 
 
 def video2image():
@@ -10,26 +34,28 @@ def video2image():
 def image2wav(image='output.png', out='output.wav'):
     img = Image.open(image)
     ar = np.asarray(img)
-    ar = np.resize(ar, (ar.shape[0], ar.shape[1]))
-    np.savetxt('ar1.csv',ar,'%5.6f')
+    ar = ar.flatten()
     ar2 = []
-    for i in ar:
-        print(i)
-        ar2.append(rgb2wve(i))
-    np.savetxt('ar2.csv',ar2,'%5.6f')
-    print(ar2[0, 0:3])
-    return ar2
-
-def wav2morse():
-    pass
+    ar3 = []
+    for i in range(int(len(ar)/3)):
+        nt = []
+        nt.append(ar[i])
+        nt.append(ar[i+1])
+        nt.append(ar[i+2])
+        ar2.append(nt)
+    ar2 = np.array(ar2)
+    for i in range(len(ar2)):
+        #print(rgb2wve(ar2[i]))
+        ar3.append(rgb2wve(ar2[i]))
+    return ar3
 
 
 
 def rgb2wve(n):
     s = 0
-    s += n[0]*256**2
-    s += n[1]*256
-    s += n[2]
+    s += int(n[0]*256**2)
+    s += int(n[1]*256)
+    s += int(n[2])
     return s
 
 
@@ -56,26 +82,15 @@ def arr2rgb(arr):
     return arr2
 
 
-
-try:
-    from libcrypto.libmorse.encoder.text2morse import input2morse
-
-    def text2video(text:str = None):
-        from libcrypto.libmorse.encoder.text2morse import input2morse
-        
-        output = input2morse(text)
-        return output
-except:
-    from text2morse import input2morse
-    
 def find_shape_difference(inp):
     l = inp.__len__()
     l2 = (np.ceil(np.sqrt(l)))**2
     return l2-l, int(np.sqrt(l2))
 
+
 def arr2image(arr):
     fsd = find_shape_difference(arr)
-    new_array = np.append(arr, ([165,16,0]*int(fsd[0])))
+    new_array = np.append(arr, ([1,1,1]*int(fsd[0])))
     new_array = new_array.reshape(fsd[1],fsd[1],3)
     return new_array
 
@@ -85,6 +100,8 @@ def tune(ar):
     ar2 = (ar+1)*10**6
     np.savetxt('.temp.csv',ar2,'%5.0f')
     ar2 = np.loadtxt('.temp.csv')
+    np.savetxt('.temp2.csv',ar2,'%5.0f')
+
     return ar2
 
 def savearrayasimg(ar):
@@ -94,14 +111,23 @@ def savearrayasimg(ar):
     img = img.convert('RGB')
     img.save('output.png')
 
+
+def cd(inpt:str = None):
+    arwv = image2wav(str)
+    arwv = np.array(arwv, dtype=np.uint8)
+    
+
 def ce(text:str = None):
     ar = text2video(text)
+    np.savetxt('ar.csv',ar)
+
     ar = tune(ar)
+
     ar = arr2rgb(ar)
     ar = arr2image(ar)
     savearrayasimg(ar)
     p2v('output.png')
-    frames2video('/home/salih/cryp/cryptology-project/frames', 'cikis.mp4')
+    #frames2video('/home/salih/cryp/cryptology-project/frames', 'cikis.mp4')
 
 
 def p2v(img):
@@ -136,4 +162,4 @@ def frames2video(folder, out):
             outv.release()
     '''
 if __name__ == "__main__":
-    print(image2wav('output.png'))
+    image2wav('output.png')

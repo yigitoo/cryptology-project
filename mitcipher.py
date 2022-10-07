@@ -1,3 +1,4 @@
+#!/bin/python3
 from libcrypto.decrypt import video2sound, sound2text
 from libcrypto.encrypt import text2sound, sound2video
 from libcrypto.libmorse.encoder.funcs import *

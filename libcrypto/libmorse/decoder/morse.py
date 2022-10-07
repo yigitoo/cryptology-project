@@ -10,8 +10,8 @@ import numpy as np
 import sklearn.cluster
 import sklearn.exceptions
 
-from libmorse.decoder.io import read_wave
-from libmorse.decoder.processing import smoothed_power, squared_signal
+from .io import read_wave
+from .processing import smoothed_power, squared_signal
 
 
 class MorseCode:

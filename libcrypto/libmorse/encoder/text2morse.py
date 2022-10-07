@@ -20,7 +20,7 @@ def text_to_morse(text):
 def gen_sine_wave(char):
     global S_rate
     # dit and dah duration
-    t=.05 if char == '.' else .15
+    t=.5 if char == '.' else .15
 
     # make a space character so low that only elephants can hear it
     freq = 500 if char != ' ' else 10
@@ -54,7 +54,7 @@ def input2morse(input:str = None, ignore = False):
 
 
 if __name__ == "__main__":
-    morse_text=text_to_morse("a")
+    morse_text=text_to_morse("sifre")
     morse_sound=code_to_sound(morse_text)
     np.savetxt('ms.csv',morse_sound)
     np.savetxt('msf.csv',morse_sound,'%5.6f')
