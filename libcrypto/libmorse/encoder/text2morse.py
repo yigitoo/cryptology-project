@@ -30,7 +30,7 @@ def gen_sine_wave(char):
     N = S_rate * t
     t_seq = np.arange(N) * T
     omega = 2*np.pi*freq
-    wave = np.concatenate((np.sin(omega*t_seq), np.zeros(5000)))
+    wave = np.concatenate((np.sin(omega*t_seq), np.zeros(88200)))
 
     return wave
 

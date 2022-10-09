@@ -120,9 +120,7 @@ def cd(inpt:str = None):
 def ce(text:str = None):
     ar = text2video(text)
     np.savetxt('ar.csv',ar)
-
     ar = tune(ar)
-
     ar = arr2rgb(ar)
     ar = arr2image(ar)
     savearrayasimg(ar)
