@@ -3,20 +3,70 @@ from scipy.io.wavfile import write as write_wav
 from PIL import Image
 import cv2, os
 import ffmpeg
+import datetime 
+import sys
+import sounddevice as sd
+import wave, struct
+from scipy.io import wavfile
+from scipy.io.wavfile import write
+from natsort import natsorted
+import librosa
+
 try:
     from libcrypto.libmorse.encoder.text2morse import input2morse
     from libcrypto.libmorse.decoder.morse import MorseCode
 except:
-    from .text2morse import input2morse
-    from ..decoder.morse import MorseCode
+    from text2morse import input2morse
+    #from .decoder.morse import MorseCode
 
-def text2video(text:str = None):
+def data2morse(text:str = None):
     output = input2morse(text)
     return output
 
-def morse2wav(arr):
-    scaled = np.int16(arr/np.max(np.abs(arr)) * 32767)
-    write_wav('outt.wav', 44100, scaled)
+#def morse2wav(arr):
+#    scaled = np.int16(arr/np.max(np.abs(arr)) * 32767)
+#    write_wav('outt.wav', 44100, scaled)
+
+def createsound(fs,n):
+    samplerate = 44100
+    t = np.linspace(0., 1., samplerate)
+    amplitude = np.iinfo(np.int16).max
+    data = amplitude * np.sin(2. * np.pi * fs * t)
+    data = data[0:len(data)//2]
+    write(f"wavs/{n}.wav", samplerate, data.astype(np.int16))
+
+def morse2wavs(data):
+    for char in range(len(data)):
+        if data[char] == ".":
+            createsound(300,char)
+        if data[char] == "-":
+            createsound(600,char)
+        if data[char] == " ":
+            createsound(1000,char)
+
+def morse2wav(inpt):
+    ar2 = []
+    for i in inpt:
+        if i == ".":
+            ar2.append(0)
+            for _ in range(10000):
+                ar2.append(0)
+                ar2.append(5)
+        elif i == "-":
+            ar2.append(0)
+            for _ in range(50000):
+                ar2.append(10)
+        elif i == " ":
+            for _ in range(100000):
+                ar2.append(20)
+        else:
+            return ValueError
+    ar2 = np.array(ar2)
+    ar2 = list(ar2)
+    for i in range(len(ar2)):
+        ar2[i] = [ar2[i]]*2
+    return np.array(ar2, dtype=np.float32).flatten()
+
 
 
 def wav2text(file:str = None):
@@ -26,7 +76,6 @@ def wav2text(file:str = None):
     except UserWarning as err:
         sys.stderr.write(f"{err}\n")
         sys.exit(1)
-
 
 def video2image():
     pass
@@ -49,17 +98,12 @@ def image2wav(image='output.png', out='output.wav'):
         ar3.append(rgb2wve(ar2[i]))
     return ar3
 
-
-
 def rgb2wve(n):
     s = 0
     s += int(n[0]*256**2)
     s += int(n[1]*256)
     s += int(n[2])
     return s
-
-
-
 
 def wve2rgb(ln):
     n1=ln // 256 // 256 % 256
@@ -81,12 +125,10 @@ def arr2rgb(arr):
         arr2.append(wve2rgb(arr[i]*10**6))
     return arr2
 
-
 def find_shape_difference(inp):
     l = inp.__len__()
     l2 = (np.ceil(np.sqrt(l)))**2
     return l2-l, int(np.sqrt(l2))
-
 
 def arr2image(arr):
     fsd = find_shape_difference(arr)
@@ -101,15 +143,14 @@ def tune(ar):
     np.savetxt('.temp.csv',ar2,'%5.0f')
     ar2 = np.loadtxt('.temp.csv')
     np.savetxt('.temp2.csv',ar2,'%5.0f')
-
     return ar2
 
-def savearrayasimg(ar):
+def savearrayasimg(ar, out):
     ar = np.array(ar, dtype=np.uint8)
 
     img = Image.fromarray(ar)
     img = img.convert('RGB')
-    img.save('output.png')
+    img.save(out)
 
 
 def cd(inpt:str = None):
@@ -118,15 +159,32 @@ def cd(inpt:str = None):
     
 
 def ce(text:str = None):
-    ar = text2video(text)
+    ar = data2morse(text)
     np.savetxt('ar.csv',ar)
     ar = tune(ar)
     ar = arr2rgb(ar)
     ar = arr2image(ar)
     savearrayasimg(ar)
-    p2v('output.png')
+    p2v('ahsenegöstermekiçin.png')
     #frames2video('/home/salih/cryp/cryptology-project/frames', 'cikis.mp4')
 
+def ce(text:str = None):
+    
+    ar = data2morse(text)
+    np.savetxt('ar.csv',ar)
+    ar = tune(ar)
+    #sd.play(ar)
+
+    ar = arr2rgb(ar)
+    print('arr2rgb',datetime.datetime.now())
+    ar = arr2image(ar)
+    print('arr2image',datetime.datetime.now())
+    savearrayasimg(ar)
+    print('savearrayasimg',datetime.datetime.now())
+    p2v('output.png')
+    print('p2v',datetime.datetime.now())
+    #frames2video('/home/salih/cryp/cryptology-project/frames', 'cikis.mp4')
+    #print('frames2video',datetime.datetime.now())
 
 def p2v(img):
     img = Image.open(img)
@@ -142,10 +200,13 @@ def p2v(img):
                 ar2 = ar2.reshape(1,1,3)
                 frame = Image.fromarray(ar2,'RGB')
                 frame.save(f'/home/salih/cryp/cryptology-project/frames/{(i+1)}.png')
+
 def frames2video(folder, out):
     video = ffmpeg.input(f'{folder}/*.png', pattern_type='glob', framerate=200)
     video = ffmpeg.output(video, out)
     ffmpeg.run(video)
+
+    
     '''
         images = []
         for i in os.listdir(folder):
@@ -159,5 +220,108 @@ def frames2video(folder, out):
             outv.write(cv2.imread(os.path.join(folder, img)))
             outv.release()
     '''
+
+char_to_dots = {
+  'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+  'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+  'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+  'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+  'Y': '-.--', 'Z': '--..', ' ': ' ', '0': '-----',
+  '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
+  '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+  '&': '.-...', "'": '.----.', '@': '.--.-.', ')': '-.--.-', '(': '-.--.',
+  ':': '---...', ',': '--..--', '=': '-...-', '!': '-.-.--', '.': '.-.-.-',
+  '-': '-....-', '+': '.-.-.', '"': '.-..-.', '?': '..--..', '/': '-..-.'
+}
+
+def text_to_morse(text):
+    morse = [char_to_dots.get(letter.upper()) for letter in text]
+    return ' '.join(morse)
+
+def morse_to_text(text:str = None):
+    morse_text = text.split()
+    result = ""
+    for char in morse_text:
+        for k,v in char_to_dots.items():
+            if v == char:
+                result += f"{k} "
+    return result[:-1]
+            
+def decodewavs(folder):
+    ar2 = ""
+    for i in natsorted(os.listdir(folder)):
+        len = librosa.get_duration(filename=folder+"/"+i)
+        if len == 0.2:
+            ar2+="."
+        if len == 0.5:
+            ar2+="-"
+        if len == 1:
+            ar2+=" "
+    return ar2
+
+decodewavs('wavr')
+
+def img2wavc(img):
+    img = Image.open(img)
+    img = img.convert('RGB')
+    ar = np.asarray(img)
+    ar2 = np.array([])
+    for i in ar.flatten():
+        ar2 = np.append(ar2, i)
+    ar2 = np.array_split(ar2, len(ar2)/3)
+    for i in range(len(ar2)):
+        ar2[i] = rgb2wve(ar2[i])
+    return np.array(ar2)
+
+def wavs2img(folder):
+    for i in os.listdir(folder):
+        samplerate, data = wavfile.read(os.path.join(folder,i))
+        ar = arr2rgb(data)
+        ar = arr2image(ar)
+        savearrayasimg(ar,out=f"imgs/{i}".replace(".wav",".png"))
+
+wavs2img('wavs')
+
+
+def morse2wavs(data):
+    for char in range(len(data)):
+    
+        if data[char] == ".":
+            createsound(".",char)
+    
+        if data[char] == "-":
+            createsound("-",char)
+    
+        if data[char] == " ":
+            createsound(" ",char)
+
+def createsound(c,n):
+    """
+    200-500 -> "."
+    500-800 -> "-"
+    800-1000 -> " "
+    """
+    k = 1
+    if c == ".":
+        fs = int(np.random.uniform(200,500,(1,1)))
+        samplerate = 22050
+        k = 4
+    if c == "-":
+        fs = int(np.random.uniform(500,800,(1,1)))
+        samplerate = 44100
+        k = 2
+    if c == " ":
+        fs = int(np.random.uniform(800,1000,(1,1)))
+        samplerate = 88200
+        k = 1 
+    samplerate = 44100
+    t = np.linspace(0., 1., samplerate)
+    amplitude = np.iinfo(np.int16).max
+    data = amplitude * np.sin(2. * np.pi * fs * t)
+    data = data[0:len(data)//k]
+    write(f"wavs/{n}.wav", samplerate, data.astype(np.int16))
+
+
+
 if __name__ == "__main__":
     image2wav('output.png')

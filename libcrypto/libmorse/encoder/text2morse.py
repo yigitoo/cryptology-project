@@ -17,6 +17,17 @@ def text_to_morse(text):
     morse = [char_to_dots.get(letter.upper()) for letter in text]
     return ' '.join(morse)
 
+def morse_to_text(text:str = None):
+    morse_text = text.split()
+    result = ""
+    for char in morse_text:
+        for k,v in char_to_dots.items():
+            if v == char:
+                result += f"{k} "
+    return result[:-1]
+            
+            
+
 def gen_sine_wave(char):
     global S_rate
     # dit and dah duration
