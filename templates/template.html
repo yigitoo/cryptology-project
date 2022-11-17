@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Example</title>
+  <script src="jquery-1.10.1.js"></script>
+  <script>
+          //get the text file
+          $.get("../toEncrypt.txt", function(data) {
+                  //split the string into an array
+                  var info = data;
+                  //set the html of each span with info from the array
+                  $('#bilgi').html(info);
+
+          });
+  </script>
+</head>
+<body>
+  <p>İçin<span id="bilgi"></span></p>
+
+  <h2>Şifreleme Sonucu</h2>
+  <div><object data="../toEncrypt.txt"></object></div>
+  <video width="300" height="300" controls>
+    <source src={{ url_for('static', filename="ftest.mp4") }} type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</body>
+</html>
