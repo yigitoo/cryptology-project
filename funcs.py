@@ -5,7 +5,6 @@ from PIL import Image
 import os
 import ffmpeg
 import cv2
-import sounddevice as sd
 from scipy.io import wavfile
 from scipy.io.wavfile import write
 from natsort import natsorted
@@ -228,7 +227,7 @@ def createsound(c, n):
     amplitude = np.iinfo(np.int16).max
     data = amplitude * np.sin(2. * np.pi * fs * t)
     data = data[0:len(data)//k]
-    write(f"/home/salih/Kriptoloji/wavs/{n}.wav",
+    write(f"./wavs/{n}.wav",
           samplerate, data.astype(np.int16))
 
 
@@ -426,6 +425,7 @@ def cd(vid):
 if __name__ == "__main__":
     try:
         os.system('python clear_dirs.py')
+        os.rm('ftest.mp4')
     except:
         pass
     data = open('toEncrypt.txt', 'r').read()

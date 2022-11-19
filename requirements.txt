@@ -1,0 +1,8 @@
+numpy
+scipy
+Pillow
+ffmpeg-python
+opencv-python
+sounddevice
+natsort
+pyaudio
