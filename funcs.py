@@ -396,9 +396,11 @@ def ce(data, outvideo):
     setkey(key)
     encryptkeyfile()
 
+
 def tothread(n):
     ar = img2wavc(f'imgsr/{n}')
-    write(filename=f'wavr/{n}'.replace('.png','.wav'), data=ar, rate=44100)
+    write(filename=f'wavr/{n}'.replace('.png', '.wav'), data=ar, rate=44100)
+
 
 def cd(vid):
     print('v2i', datetime.datetime.now())
@@ -407,8 +409,12 @@ def cd(vid):
     print('szviakey', datetime.datetime.now())
     sizeviakey('framesr', decryptkey(dk))
     print('forns', datetime.datetime.now())
-    for i in natsorted(os.listdir('imgsr')):
-        Thread(target=tothread, args=(n,))
+    
+    imgdir = natsorted(os.listdir('imgsr'))
+
+    for i in imgdir:
+        Thread(target=tothread, args=(i,)).start()
+
     print('decodewavs', datetime.datetime.now())
 
     md = decodewavs('wavr')
@@ -426,7 +432,7 @@ def cd(vid):
 if __name__ == "__main__":
     try:
         os.system('python clear_dirs.py')
-        os.rm('ftest.mp4')
+        #os.system('rm ftest.mp4')
     except:
         pass
     data = open('toEncrypt.txt', 'r').read()
