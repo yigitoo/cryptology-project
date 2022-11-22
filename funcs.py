@@ -11,7 +11,7 @@ from natsort import natsorted
 import sys
 import contextlib
 import wave
-import threading
+from threading import Thread
 
 key = []
 morse_dict = {
@@ -396,6 +396,9 @@ def ce(data, outvideo):
     setkey(key)
     encryptkeyfile()
 
+def tothread(n):
+    ar = img2wavc(f'imgsr/{n}')
+    write(filename=f'wavr/{n}'.replace('.png','.wav'), data=ar, rate=44100)
 
 def cd(vid):
     print('v2i', datetime.datetime.now())
@@ -405,9 +408,7 @@ def cd(vid):
     sizeviakey('framesr', decryptkey(dk))
     print('forns', datetime.datetime.now())
     for i in natsorted(os.listdir('imgsr')):
-        ar = img2wavc(f'imgsr/{i}')
-        write(filename=f'wavr/{i}'.replace('.png',
-              '.wav'), data=ar, rate=44100)
+        Thread(target=tothread, args=(n,))
     print('decodewavs', datetime.datetime.now())
 
     md = decodewavs('wavr')
