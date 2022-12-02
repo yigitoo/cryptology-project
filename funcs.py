@@ -3,7 +3,7 @@ import numpy as np
 from scipy.io.wavfile import write
 from PIL import Image
 import os
-import ffmpeg
+import moviepy.video.io.ImageSequenceClip
 import cv2
 from scipy.io import wavfile
 from scipy.io.wavfile import write
@@ -53,13 +53,14 @@ def text_to_morse(text):
     return ' '.join(morse)
 
 
+
 def morse_to_text(text: str = None):
     morse_text = text.split()
     result = ""
     for char in morse_text:
         for k, v in morse_dict.items():
             if v == char:
-                result += f"{k}"
+                result += str(k)
     return result
 
 
@@ -140,9 +141,11 @@ def savearrayasimg(ar, out):
 
 
 def frames2video(folder, out):
-    video = ffmpeg.input(f'{folder}/*.png', pattern_type='glob', framerate=60)
-    video = ffmpeg.output(video, out)
-    ffmpeg.run(video)
+    imgs = [os.path.join(folder,i)
+                for i in os.listdir(folder)
+                if i.endswith(".png")]
+    clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(imgs, fps=60,)
+    clip.write_videofile(out, logger=None)
 
 
 def video2images(vid):
@@ -373,7 +376,7 @@ def encryptkeyfile():
 
 def solvekey(key):
     ar = key.split("\u200d")
-    return ar[:-1], ar[-1]
+    return ar, ar[-1]
 
 
 def changeul(s, val):
@@ -403,43 +406,44 @@ def tothread(n):
 
 
 def cd(vid):
-    print('v2i', datetime.datetime.now())
     video2images(vid)
     dk = open('key', 'r').read()
-    print('szviakey', datetime.datetime.now())
     sizeviakey('framesr', decryptkey(dk))
-    print('forns', datetime.datetime.now())
     
     imgdir = natsorted(os.listdir('imgsr'))
 
     for i in imgdir:
-        Thread(target=tothread, args=(i,)).start()
+        tothread(i)
 
-    print('decodewavs', datetime.datetime.now())
 
     md = decodewavs('wavr')
     s = ""
     o = ""
+    o2 = []
     for i in md:
         s += i
-    for i in s.split('  '):
-        o += morse_to_text(i) + " "
-    print('finish', datetime.datetime.now())
+    print(s)
+    for j in s.split(' '):
+        o2.append(j+' ')
+    print(o2)
+    for k in o2:
+        o+=t2m(k)
     print(o)
-    return o
-
 
 if __name__ == "__main__":
     try:
-        os.system('python clear_dirs.py')
+        pass
+        #os.system('python clear_dirs.py')
         #os.system('rm ftest.mp4')
     except:
         pass
     data = open('toEncrypt.txt', 'r').read()
     if sys.argv[1] == "-c":
+        os.system('python clear_dirs.py')
         ce(data, 'ftest.mp4')
     if sys.argv[1] == "-d":
         cd('ftest.mp4')
     if sys.argv[1] == "-cd":
+        os.system('python clear_dirs.py')
         ce(data, 'ftest.mp4')
         cd('ftest.mp4')
