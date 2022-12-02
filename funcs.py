@@ -12,6 +12,7 @@ import sys
 import contextlib
 import wave
 from threading import Thread
+from collections import OrderedDict
 
 key = []
 morse_dict = {
@@ -30,6 +31,10 @@ morse_dict = {
     '’': '.-.-..-....--...-.--..-', '‘': '.-.-..-....--...-.--..-',
     ';': '-..-.--.-.--.-.--'
 }
+
+rdict = {}
+for i in morse_dict:
+    rdict[morse_dict[i]] = i
 
 
 def saveul(s):
@@ -55,13 +60,12 @@ def text_to_morse(text):
 
 
 def morse_to_text(text: str = None):
-    morse_text = text.split()
-    result = ""
-    for char in morse_text:
-        for k, v in morse_dict.items():
-            if v == char:
-                result += str(k)
-    return result
+    #morse_text = text.split()
+    #result = ""
+    #for char in morse_text:
+    #    result+=rdict[char]
+    #print(result)
+    return rdict[text]
 
 
 def createsound(fs, n):
@@ -417,18 +421,27 @@ def cd(vid):
 
 
     md = decodewavs('wavr')
+    #md.pop(md[-1]) 
+    #md.append(md[-1][:1])
     s = ""
     o = ""
     o2 = []
+    print(md)
     for i in md:
         s += i
     print(s)
-    for j in s.split(' '):
-        o2.append(j+' ')
+    ml = s.split(' ')
+    print(ml)
+    for j in range(len(ml)):
+        try:
+            o2.append(morse_to_text(ml[j]))
+        except KeyError:
+            if not j==len(ml)-1:
+                o2.append(morse_to_text(ml[j]))
+            else:
+                o2.append(morse_to_text(ml[j][:-1]))
+
     print(o2)
-    for k in o2:
-        o+=t2m(k)
-    print(o)
 
 if __name__ == "__main__":
     try:
