@@ -1,7 +1,7 @@
 numpy
 scipy
 Pillow
-ffmpeg-python
+moviepy
 opencv-python
 sounddevice
 natsort

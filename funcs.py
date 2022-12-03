@@ -389,6 +389,7 @@ def changeul(s, val):
 
 def ce(data, outvideo):
     morse_data = text_to_morse(data)
+    os.system(f'rm {outvideo}')
     morse2wavs(morse_data)
     wavs2img('wavs')
     resizeimgs('imgs')
