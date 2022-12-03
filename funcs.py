@@ -3,7 +3,7 @@ import numpy as np
 from scipy.io.wavfile import write
 from PIL import Image
 import os
-import moviepy.video.io.ImageSequenceClip
+import ffmpeg
 import cv2
 from scipy.io import wavfile
 from scipy.io.wavfile import write
@@ -12,7 +12,6 @@ import sys
 import contextlib
 import wave
 from threading import Thread
-from collections import OrderedDict
 
 key = []
 morse_dict = {
@@ -31,10 +30,6 @@ morse_dict = {
     '’': '.-.-..-....--...-.--..-', '‘': '.-.-..-....--...-.--..-',
     ';': '-..-.--.-.--.-.--'
 }
-
-rdict = {}
-for i in morse_dict:
-    rdict[morse_dict[i]] = i
 
 
 def saveul(s):
@@ -58,14 +53,14 @@ def text_to_morse(text):
     return ' '.join(morse)
 
 
-
 def morse_to_text(text: str = None):
-    #morse_text = text.split()
-    #result = ""
-    #for char in morse_text:
-    #    result+=rdict[char]
-    #print(result)
-    return rdict[text]
+    morse_text = text.split()
+    result = ""
+    for char in morse_text:
+        for k, v in morse_dict.items():
+            if v == char:
+                result += f"{k}"
+    return result
 
 
 def createsound(fs, n):
@@ -145,11 +140,9 @@ def savearrayasimg(ar, out):
 
 
 def frames2video(folder, out):
-    imgs = [os.path.join(folder,i)
-                for i in os.listdir(folder)
-                if i.endswith(".png")]
-    clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(imgs, fps=60,)
-    clip.write_videofile(out, logger=None)
+    video = ffmpeg.input(f'{folder}/*.png', pattern_type='glob', framerate=60)
+    video = ffmpeg.output(video, out)
+    ffmpeg.run(video)
 
 
 def video2images(vid):
@@ -329,6 +322,7 @@ def sizeviakey(folder, key):
 def encryptkey(key):
     ar2 = []
     for vfi in key.split('\u200d'):
+        print(vfi)
         vfis = vfi[1:]
         vfis = vfis[:int(np.ceil(len(vfis)/2))-1]
         a = str(vfis) + str(np.floor(np.random.uniform(10, 99, (1, 1))[0][0]))
@@ -370,17 +364,17 @@ def setkey(key):
     return r  # +chr(saveul(open('toEncrypt.txt', 'r').read()))
 
 
-def encryptkeyfile():
+def encryptkeyfile(fname):
     k = open('key', 'r')
     key = k.read()
     key = encryptkey(key)
-    k = open('key', 'w')
+    k = open(fname, 'w')
     k.write(key)
 
 
 def solvekey(key):
     ar = key.split("\u200d")
-    return ar, ar[-1]
+    return ar[:-1], ar[-1]
 
 
 def changeul(s, val):
@@ -401,7 +395,7 @@ def ce(data, outvideo):
     unitedwavs('wavs')
     frames2video('imgs2', outvideo)
     setkey(key)
-    encryptkeyfile()
+    encryptkeyfile(outvideo)
 
 
 def tothread(n):
@@ -410,44 +404,33 @@ def tothread(n):
 
 
 def cd(vid):
+   # print('v2i', datetime.datetime.now())
     video2images(vid)
     dk = open('key', 'r').read()
+    #print('szviakey', datetime.datetime.now())
     sizeviakey('framesr', decryptkey(dk))
-    
-    imgdir = natsorted(os.listdir('imgsr'))
 
-    for i in imgdir:
+    #print('forns', datetime.datetime.now())
+    for i in natsorted(os.listdir('imgsr')):
         tothread(i)
-
-
+        # Thread(target=tothread, args=(i,)).start()
+        #print(i, 'decodewavs', datetime.datetime.now())
     md = decodewavs('wavr')
-    #md.pop(md[-1]) 
-    #md.append(md[-1][:1])
+
     s = ""
     o = ""
-    o2 = []
-    print(md)
     for i in md:
         s += i
-    print(s)
-    ml = s.split(' ')
-    print(ml)
-    for j in range(len(ml)):
-        try:
-            o2.append(morse_to_text(ml[j]))
-        except KeyError:
-            if not j==len(ml)-1:
-                o2.append(morse_to_text(ml[j]))
-            else:
-                o2.append(morse_to_text(ml[j][:-1]))
+    for i in s.split('  '):
+        o += morse_to_text(i) + " "
+    #print('finish', datetime.datetime.now())
+    print(o)
+    return o
 
-    print(o2)
 
 if __name__ == "__main__":
     try:
-        pass
-        #os.system('python clear_dirs.py')
-        #os.system('rm ftest.mp4')
+        os.system('python clear_dirs.py')
     except:
         pass
     data = open('toEncrypt.txt', 'r').read()
