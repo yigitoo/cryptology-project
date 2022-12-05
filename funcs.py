@@ -36,11 +36,16 @@ rdict = {}
 for i in morse_dict:
     rdict[morse_dict[i]] = i
 
+    # md.pop(md[-1])
+    # md.append(md[-1][:1])
+
+
 def saveul(s):
     r = ""
     for i in s:
-        r+=str(int(i.isupper()))
+        r += str(int(i.isupper()))
     return r
+
 
 def compbin(bin):
     first = bin[0]
@@ -49,12 +54,12 @@ def compbin(bin):
     zl = []
     ol = []
     for i in zeros:
-        if i!='':
+        if i != '':
             zl.append(len(i))
     for i in ones:
-        if i!='':
+        if i != '':
             ol.append(len(i))
-    return first, ol,zl
+    return first, ol, zl
 
 
 def text_to_morse(text):
@@ -68,13 +73,12 @@ def text_to_morse(text):
     return ' '.join(morse)
 
 
-
 def morse_to_text(text: str = None):
     #morse_text = text.split()
     #result = ""
-    #for char in morse_text:
+    # for char in morse_text:
     #    result+=rdict[char]
-    #print(result)
+    # print(result)
     return rdict[text]
 
 
@@ -155,9 +159,9 @@ def savearrayasimg(ar, out):
 
 
 def frames2video(folder, out):
-    imgs = [os.path.join(folder,i)
-                for i in os.listdir(folder)
-                if i.endswith(".png")]
+    imgs = [os.path.join(folder, i)
+            for i in os.listdir(folder)
+            if i.endswith(".png")]
     clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(imgs, fps=60,)
     clip.write_videofile(out, logger=None)
 
@@ -410,7 +414,7 @@ def ce(data, outvideo, keyf):
     morse2wavs(morse_data)
     wavs2img('wavs')
     resizeimgs('imgs')
-    #unitedwavs('wavs')
+    # unitedwavs('wavs')
     frames2video('imgs2', outvideo)
     setkey(key, keyf)
     encryptkeyfile(keyf)
@@ -425,16 +429,15 @@ def cd(vid, keyf):
     video2images(vid)
     dk = open(keyf, 'r').read()
     sizeviakey('framesr', decryptkey(dk))
-    
+
     imgdir = natsorted(os.listdir('imgsr'))
 
     for i in imgdir:
         tothread(i)
 
-
     md = decodewavs('wavr')
-    #md.pop(md[-1]) 
-    #md.append(md[-1][:1])
+    # md.pop(md[-1])
+    # md.append(md[-1][:1])
     s = ""
     o = ""
     o2 = []
@@ -448,13 +451,14 @@ def cd(vid, keyf):
         try:
             o2.append(morse_to_text(ml[j]))
         except KeyError:
-            if not j==len(ml)-1:
+            if not j == len(ml)-1:
                 o2.append(morse_to_text(ml[j]))
             else:
                 o2.append(morse_to_text(ml[j][:-1]))
     for i in o2:
-        o+=i
-    print(o )
+        o += i
+    print(o)
+
 
 if __name__ == "__main__":
     try:
@@ -472,4 +476,4 @@ if __name__ == "__main__":
     if sys.argv[1] == "-cd":
         os.system('python clear_dirs.py')
         ce(data, 'ftest.mp4', 'ftest')
-        cd('ftest.mp4','ftest')
+        cd('ftest.mp4', 'ftest')

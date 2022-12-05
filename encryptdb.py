@@ -10,9 +10,9 @@ db = [{"telno": "0531 415 92 65",
        "eposta": "ayazgümüs@gmail.com"}]
 
 vk = {
-    0:"tels",
-    1:"pws",
-    2:"ems"
+    0: "tels",
+    1: "pws",
+    2: "ems"
 }
 
 for i in db:
@@ -22,5 +22,6 @@ for i in db:
     print(l)
     for j in l:
         print(j)
-        ce(j,f'db/{vk[l.index(j)]}/'+j+'--'+ln+'.mp4',f'db/{vk[l.index(j)]}/'+j+'--'+ln)
+        ce(j, f'db/{vk[l.index(j)]}/'+j+'--'+ln +
+           '.mp4', f'db/{vk[l.index(j)]}/'+j+'--'+ln)
 print(db)
