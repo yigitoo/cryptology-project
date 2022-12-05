@@ -3,7 +3,7 @@ import numpy as np
 from scipy.io.wavfile import write
 from PIL import Image
 import os
-import ffmpeg
+import moviepy.video.io.ImageSequenceClip
 import cv2
 from scipy.io import wavfile
 from scipy.io.wavfile import write
@@ -12,6 +12,7 @@ import sys
 import contextlib
 import wave
 from threading import Thread
+from collections import OrderedDict
 
 key = []
 morse_dict = {
@@ -19,7 +20,7 @@ morse_dict = {
     'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
     'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
     'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
-    'Y': '-.--', 'Z': '--..', ' ': ' ', '0': '-----',
+    'Y': '-.--', 'Z': '--..', ' ': '-.--.-.', '0': '-----',
     '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
     '6': '-....', '7': '--...', '8': '---..', '9': '----.',
     '&': '.-...', "'": '.----.', '@': '.--.-.', ')': '-.--.-', '(': '-.--.',
@@ -31,15 +32,34 @@ morse_dict = {
     ';': '-..-.--.-.--.-.--'
 }
 
+rdict = {}
+for i in morse_dict:
+    rdict[morse_dict[i]] = i
+
+    # md.pop(md[-1])
+    # md.append(md[-1][:1])
+
 
 def saveul(s):
     r = ""
     for i in s:
-        if i.isupper() == True:
-            r += "1"
-        else:
-            r += "0"
-    return int(r, 2)
+        r += str(int(i.isupper()))
+    return r
+
+
+def compbin(bin):
+    first = bin[0]
+    zeros = bin.split('1')
+    ones = bin.split('0')
+    zl = []
+    ol = []
+    for i in zeros:
+        if i != '':
+            zl.append(len(i))
+    for i in ones:
+        if i != '':
+            ol.append(len(i))
+    return first, ol, zl
 
 
 def text_to_morse(text):
@@ -54,13 +74,12 @@ def text_to_morse(text):
 
 
 def morse_to_text(text: str = None):
-    morse_text = text.split()
-    result = ""
-    for char in morse_text:
-        for k, v in morse_dict.items():
-            if v == char:
-                result += f"{k}"
-    return result
+    #morse_text = text.split()
+    #result = ""
+    # for char in morse_text:
+    #    result+=rdict[char]
+    # print(result)
+    return rdict[text]
 
 
 def createsound(fs, n):
@@ -140,9 +159,11 @@ def savearrayasimg(ar, out):
 
 
 def frames2video(folder, out):
-    video = ffmpeg.input(f'{folder}/*.png', pattern_type='glob', framerate=60)
-    video = ffmpeg.output(video, out)
-    ffmpeg.run(video)
+    imgs = [os.path.join(folder, i)
+            for i in os.listdir(folder)
+            if i.endswith(".png")]
+    clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(imgs, fps=60,)
+    clip.write_videofile(out, logger=None)
 
 
 def video2images(vid):
@@ -322,10 +343,10 @@ def sizeviakey(folder, key):
 def encryptkey(key):
     ar2 = []
     for vfi in key.split('\u200d'):
-        print(vfi)
         vfis = vfi[1:]
         vfis = vfis[:int(np.ceil(len(vfis)/2))-1]
         a = str(vfis) + str(np.floor(np.random.uniform(10, 99, (1, 1))[0][0]))
+        print(a)
         ar2.append(chr(int(float(a))))
     r = ""
     for i in ar2:
@@ -347,7 +368,7 @@ def decryptkey(key):
     return r
 
 
-def setkey(key):
+def setkey(key, keyf):
     r = ""
     for i in key:
         r += i+'\u200d'
@@ -360,21 +381,21 @@ def setkey(key):
     for i in ar2:
         r += i
     # r = encryptkey(r)
-    open('key', 'w+').write(r)
+    open(keyf, 'w+').write(r)
     return r  # +chr(saveul(open('toEncrypt.txt', 'r').read()))
 
 
-def encryptkeyfile(fname):
-    k = open('key', 'r')
+def encryptkeyfile(keyf):
+    k = open(keyf, 'r')
     key = k.read()
     key = encryptkey(key)
-    k = open(fname, 'w')
+    k = open(keyf, 'w')
     k.write(key)
 
 
 def solvekey(key):
     ar = key.split("\u200d")
-    return ar[:-1], ar[-1]
+    return ar, ar[-1]
 
 
 def changeul(s, val):
@@ -387,16 +408,16 @@ def changeul(s, val):
     return r
 
 
-def ce(data, outvideo):
-    morse_data = text_to_morse(data)
+def ce(data, outvideo, keyf):
     os.system(f'rm {outvideo}')
+    morse_data = text_to_morse(data)
     morse2wavs(morse_data)
     wavs2img('wavs')
     resizeimgs('imgs')
-    unitedwavs('wavs')
+    # unitedwavs('wavs')
     frames2video('imgs2', outvideo)
-    setkey(key)
-    encryptkeyfile(outvideo)
+    setkey(key, keyf)
+    encryptkeyfile(keyf)
 
 
 def tothread(n):
@@ -404,43 +425,55 @@ def tothread(n):
     write(filename=f'wavr/{n}'.replace('.png', '.wav'), data=ar, rate=44100)
 
 
-def cd(vid):
-   # print('v2i', datetime.datetime.now())
+def cd(vid, keyf):
     video2images(vid)
-    dk = open('key', 'r').read()
-    #print('szviakey', datetime.datetime.now())
+    dk = open(keyf, 'r').read()
     sizeviakey('framesr', decryptkey(dk))
 
-    #print('forns', datetime.datetime.now())
-    for i in natsorted(os.listdir('imgsr')):
-        tothread(i)
-        # Thread(target=tothread, args=(i,)).start()
-        #print(i, 'decodewavs', datetime.datetime.now())
-    md = decodewavs('wavr')
+    imgdir = natsorted(os.listdir('imgsr'))
 
+    for i in imgdir:
+        tothread(i)
+
+    md = decodewavs('wavr')
+    # md.pop(md[-1])
+    # md.append(md[-1][:1])
     s = ""
     o = ""
+    o2 = []
+    print(md)
     for i in md:
         s += i
-    for i in s.split('  '):
-        o += morse_to_text(i) + " "
-    #print('finish', datetime.datetime.now())
+    print(s)
+    ml = s.split(' ')
+    print(ml)
+    for j in range(len(ml)):
+        try:
+            o2.append(morse_to_text(ml[j]))
+        except KeyError:
+            if not j == len(ml)-1:
+                o2.append(morse_to_text(ml[j]))
+            else:
+                o2.append(morse_to_text(ml[j][:-1]))
+    for i in o2:
+        o += i
     print(o)
-    return o
 
 
 if __name__ == "__main__":
     try:
-        os.system('python clear_dirs.py')
+        pass
+        #os.system('python clear_dirs.py')
+        #os.system('rm ftest.mp4')
     except:
         pass
     data = open('toEncrypt.txt', 'r').read()
     if sys.argv[1] == "-c":
         os.system('python clear_dirs.py')
-        ce(data, 'ftest.mp4')
+        ce(data, 'ftest.mp4', 'ftest')
     if sys.argv[1] == "-d":
         cd('ftest.mp4')
     if sys.argv[1] == "-cd":
         os.system('python clear_dirs.py')
-        ce(data, 'ftest.mp4')
-        cd('ftest.mp4')
+        ce(data, 'ftest.mp4', 'ftest')
+        cd('ftest.mp4', 'ftest')
